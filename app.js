@@ -11,7 +11,7 @@ var payBillRoutes = require('./routes/payBillRoutes')
 
 const MongoClient = require('mongodb').MongoClient;
 
-const uri = 'mongodb://localhost:27017/imaP';
+const uri = 'mongodb+srv://anki:DbyG1PUCfJKyJd0J@cluster0.y4pzwg5.mongodb.net/?retryWrites=true&w=majority';
 
 // Set up Express app
 
@@ -29,7 +29,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Connect to MongoDB
 
-mongoose.connect('mongodb://localhost:27017/imaP', { 
+mongoose.connect('mongodb+srv://anki:DbyG1PUCfJKyJd0J@cluster0.y4pzwg5.mongodb.net/?retryWrites=true&w=majority', { 
   useNewUrlParser: true, 
   useUnifiedTopology: true 
 
