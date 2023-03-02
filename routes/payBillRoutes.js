@@ -1,110 +1,129 @@
-const { json } = require("body-parser");
-const express = require("express");
-var router = express.Router();
-var ObjectId = require("mongoose").Types.ObjectId;
+const { Router } = require("express");
+const { validationResult } = require("express-validator");
+const { payBill } = require("../models/payBillModel");
+const { ObjectId } = require("mongoose").Types;
 
-var { payBill } = require("../models/payBillModel");
+const router = Router();
 
-//=>localhost:3000/ExpenditureForm-----------------------------------------------------------------------------------------------------------------------
-
-router.get("/listbill", (req, res) => {
-  payBill.find((err, doc) => {
-    if (!err) {
-      res.send(doc);
-    } else {
-      console.log(
-        "error in retriving payBill api" +
-          JSON.stringfy(err, undefined, 2)
-      );
-    }
-  });
+router.get("/listbill", async (req, res) => {
+  try {
+    const bills = await payBill.find();
+    res.send(bills);
+  } catch (error) {
+    console.error("Error in retrieving payBill api:", error);
+    res.status(500).send("An error occurred while retrieving the payBill data");
+  }
 });
-//POST----------------------------------------------------------------------------------------------------------------------------------------------------
-router.post("/paybill", (req, res) => {
-    var addPayBill = new payBill({
-     
-   
-    imaNo:req.body.imaNo,
-    degn:req.body.degn,
-    name:req.body.name,
-    dob:req.body.dob,
-    bp:req.body.bp,
-    pp:req.body.pp,
-    gp:req.body.gp,
-    da:req.body.da,
-    hra:req.body.hra,
-    hca:req.body.hca,
-    tpa:req.body.tpa,
-    tpa_da:req.body.tpa_da,
-    wa:req.body.wa,
-    arr:req.body.arr,
-    misc1:req.body.misc1,
-    grossPay:req.body.grossPay,
-    gpfSubs:req.body.gpfSubs,
-    gpfRec:req.body.gpfRec,
-    fa:req.body.fa,                                   
-    cgeis:req.body.cgeis,
-    rent:req.body.rent,
-    misc2:req.body.misc2,
-    eol:req.body.eol,
-    netPay:req.body.netPay,
-    remark:req.body.remark
-    
 
-    });
-    addPayBill.save((err, docs) => {
-      if (!err) {
-        res.send(docs);
-      } else {
-        console.log(
-          "error in saving payBill " + JSON.stringify(err, undefined, 2)
-        );
-      }
-    });
+router.post("/paybill", async (req, res) => {
+  const {
+    years,
+    type,
+    month,
+    imaNo,
+    degn,
+    name,
+    dob,
+    bp,
+    pp,
+    gp,
+    da,
+    hra,
+    hca,
+    tpa,
+    tpa_da,
+    wa,
+    arr,
+    misc1,
+    grossPay,
+    gpfSubs,
+    gpfRec,
+    fa,
+    cgeis,
+    rent,
+    misc2,
+    eol,
+    netPay,
+    remark,
+  } = req.body;
+
+  const bill = new payBill({
+    years,
+    type,
+    month,
+    imaNo,
+    degn,
+    name,
+    dob,
+    bp,
+    pp,
+    gp,
+    da,
+    hra,
+    hca,
+    tpa,
+    tpa_da,
+    wa,
+    arr,
+    misc1,
+    grossPay,
+    gpfSubs,
+    gpfRec,
+    fa,
+    cgeis,
+    rent,
+    misc2,
+    eol,
+    netPay,
+    remark,
   });
-  router.put('/editbill/:id', (req, res) => {
-    User.findById(req.params.id)
-      .then(user => {
-       
-        user.updatedAt = Date.now();
-       user.year=req.body.year;
-        user.month=req.body.month,
-        user.type=req.body.type,
-        user.imaNo=req.body.imaNo,
-       user.degn=req.body.degn,
-        user.name=req.body.name,
-        user.dob=req.body.dob,
-        user.bp=req.body.bp,
-        user.pp=req.body.pp,
-        user.gp=req.body.gp,
-        user.da=req.body.da,
-        user.hra=req.body.hra,
-        user.hca=req.body.hca,
-        user.tpa=req.body.tpa,
-        user.tpa_da=req.body.tpa_da,
-        user.wa=req.body.wa,
-        user.arr=req.body.arr,
-        user.misc1=req.body.misc1,
-        user.grossPay=req.body.grossPay,
-        user.gpfSubs=req.body.gpfSubs,
-        user.gpfRec=req.body.gpfRec,
-        user.fa=req.body.fa,                                   
-        user.cgeis=req.body.cgeis,
-        user.rent=req.body.rent,
-        user.misc2=req.body.misc2,
-        user.eol=req.body.eol,
-        user.netPay=req.body.netPay,
-        user.remark=req.body.remark
-        return user.save();
-      })
-      .then(user => {
-        res.json(user);
-      })
-      .catch(err => {
-        console.error(err);
-        res.status(500).json({ error: 'An error occurred while updating the user.' });
-      });
-  });
-  
-  
+
+  try {
+    const savedBill = await bill.save();
+    res.send(savedBill);
+  } catch (error) {
+    console.error("Error in saving payBill:", error);
+    res.status(500).send("An error occurred while saving the payBill data");
+  }
+});
+
+router.put("/edit/:id", async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const updatedBill = await payBill.findByIdAndUpdate(
+      ObjectId(id),
+      { $set: req.body },
+      { new: true },
+    );
+    if (!updatedBill) {
+      return res.status(404).send("The bill with the given ID was not found.");
+    }
+    res.send(updatedBill);
+  } catch (error) {
+    console.error("Error in updating payBill:", error);
+    res.status(500).send("An error occurred while updating the payBill data");
+  }
+});
+router.delete("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deletedBill = await payBill.findByIdAndDelete(ObjectId(id));
+    if (!deletedBill) {
+      return res.status(404).send("The bill with the given ID was not found.");
+    }
+    res.send(deletedBill);
+  } catch (error) {
+    console.error("Error in deleting payBill:", error);
+    res.status(500).send("An error occurred while deleting the payBill data");
+  }
+});
+
+
 module.exports = router;
